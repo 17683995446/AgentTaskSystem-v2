@@ -1,0 +1,28 @@
+{
+  "tasks": [
+    {
+      "name": "website",
+      "description": "网站检查",
+      "interval": 5,
+      "command": "echo '🌐 检查网站... OK'"
+    },
+    {
+      "name": "database",
+      "description": "数据库检查",
+      "interval": 10,
+      "command": "echo '🗄️ 检查数据库... OK'"
+    },
+    {
+      "name": "disk",
+      "description": "磁盘空间检查",
+      "interval": 30,
+      "command": "df -h | grep -E '(Filesystem|/dev/)'"
+    },
+    {
+      "name": "memory",
+      "description": "内存检查",
+      "interval": 15,
+      "command": "free -h"
+    }
+  ]
+}

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentTaskSystem - 任务管理</title>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: var(--border-color);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-card.success {
+            border-left-color: var(--success-color);
+        }
+
+        .stat-card.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        .stat-card.danger {
+            border-left-color: var(--danger-color);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .content-area {
+            display: none;
+        }
+
+        .content-area.active {
+            display: block;
+        }
+
+        .task-list {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .task-item {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .task-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-info h3 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .task-info p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge.running {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-badge.completed {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-badge.failed {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4f46e5;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .alert-item {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            border-left: 4px solid var(--danger-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alert-item.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        .alert-item.info {
+            border-left-color: var(--info-color);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🤖 AgentTaskSystem</h1>
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="tasks">任务管理</button>
+            <button class="nav-tab" data-tab="alerts">告警中心</button>
+            <button class="nav-tab" data-tab="logs">执行日志</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="running-count">0</div>
+                <div class="stat-label">运行中任务</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-value" id="completed-count">0</div>
+                <div class="stat-label">已完成</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-value" id="pending-count">0</div>
+                <div class="stat-label">待执行</div>
+            </div>
+            <div class="stat-card danger">
+                <div class="stat-value" id="failed-count">0</div>
+                <div class="stat-label">失败任务</div>
+            </div>
+        </div>
+
+        <div class="content-area active" id="tasks">
+            <div class="page-header">
+                <h2>任务列表</h2>
+                <button class="btn btn-primary" onclick="createNewTask()">+ 创建任务</button>
+            </div>
+            <div class="task-list" id="task-list">
+            </div>
+        </div>
+
+        <div class="content-area" id="alerts">
+            <div class="page-header">
+                <h2>告警中心</h2>
+            </div>
+            <div class="alert-list" id="alert-list">
+            </div>
+        </div>
+
+        <div class="content-area" id="logs">
+            <div class="page-header">
+                <h2>执行日志</h2>
+            </div>
+            <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <p>暂无执行日志</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        class TaskManager {
+            constructor() {
+                this.tasks = [];
+                this.alerts = [];
+                this.init();
+            }
+
+            init() {
+                this.loadMockData();
+                this.renderTasks();
+                this.renderAlerts();
+                this.bindEvents();
+                this.updateStats();
+            }
+
+            loadMockData() {
+                this.tasks = [
+                    {
+                        id: "task_001",
+                        name: "每日数据采集",
+                        type: "DataCollect",
+                        status: "running",
+                        createdAt: "2026-05-30 09:00:00",
+                        description: "每小时采集业务数据"
+                    },
+                    {
+                        id: "task_002",
+                        name: "网站性能监控",
+                        type: "HealthMonitor",
+                        status: "running",
+                        createdAt: "2026-05-30 08:30:00",
+                        description: "实时监控网站性能指标"
+                    },
+                    {
+                        id: "task_003",
+                        name: "生成日报",
+                        type: "DailyReport",
+                        status: "completed",
+                        createdAt: "2026-05-30 00:00:00",
+                        description: "每日0点生成数据日报"
+                    },
+                    {
+                        id: "task_004",
+                        name: "数据同步",
+                        type: "DataSync",
+                        status: "pending",
+                        createdAt: "2026-05-30 10:00:00",
+                        description: "跨系统数据同步任务"
+                    },
+                    {
+                        id: "task_005",
+                        name: "数据库清理",
+                        type: "Maintenance",
+                        status: "failed",
+                        createdAt: "2026-05-29 23:00:00",
+                        description: "定期清理过期数据"
+                    }
+                ];
+
+                this.alerts = [
+                    {
+                        id: "alert_001",
+                        type: "warning",
+                        message: "API响应时间过长",
+                        timestamp: "2026-05-30 10:25:00",
+                        resolved: false
+                    },
+                    {
+                        id: "alert_002",
+                        type: "info",
+                        message: "每日任务执行完成",
+                        timestamp: "2026-05-30 09:15:00",
+                        resolved: true
+                    }
+                ];
+            }
+
+            renderTasks() {
+                const taskList = document.getElementById("task-list");
+                
+                if (this.tasks.length === 0) {
+                    taskList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>暂无任务，点击上方按钮创建一个！</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                taskList.innerHTML = this.tasks.map(task => `
+                    <div class="task-item">
+                        <div class="task-info">
+                            <h3>${task.name}</h3>
+                            <p>类型: ${task.type} | 创建: ${task.createdAt}</p>
+                        </div>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <span class="status-badge ${task.status}">
+                                ${this.getStatusText(task.status)}
+                            </span>
+                            <div class="task-actions">
+                                ${this.getActionButtons(task)}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            getStatusText(status) {
+                const statusMap = {
+                    running: "运行中",
+                    completed: "已完成",
+                    pending: "待执行",
+                    failed: "失败",
+                    paused: "已暂停"
+                };
+                return statusMap[status] || status;
+            }
+
+            getActionButtons(task) {
+                if (task.status === "running") {
+                    return `
+                        <button class="btn btn-danger" onclick="taskManager.pauseTask('${task.id}')">暂停</button>
+                    `;
+                } else if (task.status === "pending" || task.status === "paused") {
+                    return `
+                        <button class="btn btn-success" onclick="taskManager.startTask('${task.id}')">启动</button>
+                    `;
+                } else if (task.status === "failed") {
+                    return `
+                        <button class="btn btn-primary" onclick="taskManager.retryTask('${task.id}')">重试</button>
+                    `;
+                } else {
+                    return `
+                        <button class="btn btn-primary" onclick="taskManager.viewTask('${task.id}')">查看</button>
+                    `;
+                }
+            }
+
+            renderAlerts() {
+                const alertList = document.getElementById("alert-list");
+                
+                const activeAlerts = this.alerts.filter(a => !a.resolved);
+                
+                if (activeAlerts.length === 0) {
+                    alertList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">✅</div>
+                            <p>暂无活跃告警，一切正常！</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                alertList.innerHTML = activeAlerts.map(alert => `
+                    <div class="alert-item ${alert.type}">
+                        <div>
+                            <h4>${alert.message}</h4>
+                            <p style="color: var(--text-secondary); font-size: 0.875rem;">${alert.timestamp}</p>
+                        </div>
+                        <button class="btn btn-success" onclick="taskManager.resolveAlert('${alert.id}')">
+                            处理
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            updateStats() {
+                document.getElementById("running-count").textContent = 
+                    this.tasks.filter(t => t.status === "running").length;
+                document.getElementById("completed-count").textContent = 
+                    this.tasks.filter(t => t.status === "completed").length;
+                document.getElementById("pending-count").textContent = 
+                    this.tasks.filter(t => t.status === "pending").length;
+                document.getElementById("failed-count").textContent = 
+                    this.tasks.filter(t => t.status === "failed").length;
+            }
+
+            bindEvents() {
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        
+                        document.querySelectorAll('.content-area').forEach(c => c.classList.remove('active'));
+                        document.getElementById(tab.dataset.tab).classList.add('active');
+                    });
+                });
+            }
+
+            startTask(taskId) {
+                const task = this.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.status = "running";
+                    this.renderTasks();
+                    this.updateStats();
+                    this.showNotification(`任务 ${task.name} 已启动`, "success");
+                }
+            }
+
+            pauseTask(taskId) {
+                const task = this.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.status = "paused";
+                    this.renderTasks();
+                    this.updateStats();
+                    this.showNotification(`任务 ${task.name} 已暂停`, "info");
+                }
+            }
+
+            retryTask(taskId) {
+                const task = this.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.status = "pending";
+                    this.renderTasks();
+                    this.updateStats();
+                    this.showNotification(`任务 ${task.name} 已加入队列`, "info");
+                }
+            }
+
+            viewTask(taskId) {
+                const task = this.tasks.find(t => t.id === taskId);
+                alert(`查看任务详情: ${task.name}`);
+            }
+
+            resolveAlert(alertId) {
+                const alert = this.alerts.find(a => a.id === alertId);
+                if (alert) {
+                    alert.resolved = true;
+                    this.renderAlerts();
+                    this.showNotification("告警已处理", "success");
+                }
+            }
+
+            showNotification(message, type = "info") {
+                const colors = {
+                    success: "#10b981",
+                    error: "#ef4444",
+                    info: "#06b6d4"
+                };
+                
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed; top: 100px; right: 20px;
+                    background: white; padding: 1rem 1.5rem; border-radius: 8px;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-left:4px solid ${colors[type]};
+                    z-index: 10000;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => notification.remove(), 3000);
+            }
+        }
+
+        function createNewTask() {
+            alert("创建新任务功能（演示用）");
+        }
+
+        let taskManager;
+        document.addEventListener('DOMContentLoaded', () => {
+            taskManager = new TaskManager();
+        });
+    </script>
+</body>
+</html>

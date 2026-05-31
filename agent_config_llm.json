@@ -1,0 +1,60 @@
+{
+  "tasks": [
+    {
+      "name": "llm_chat",
+      "description": "LLM对话服务",
+      "interval": 0,
+      "type": "llm",
+      "command": "echo '🤖 LLM服务就绪'",
+      "llm_config": {
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "max_tokens": 1000
+      }
+    },
+    {
+      "name": "llm_summary",
+      "description": "自动摘要生成",
+      "interval": 60,
+      "type": "llm",
+      "command": "echo '📝 生成摘要...'",
+      "llm_config": {
+        "model": "gpt-3.5-turbo",
+        "prompt": "请总结以下内容："
+      }
+    },
+    {
+      "name": "llm_translate",
+      "description": "翻译服务",
+      "interval": 0,
+      "type": "llm",
+      "command": "echo '🌐 翻译服务就绪'",
+      "llm_config": {
+        "model": "gpt-3.5-turbo",
+        "prompt": "请将以下内容翻译成中文："
+      }
+    },
+    {
+      "name": "llm_code_review",
+      "description": "代码审查",
+      "interval": 300,
+      "type": "llm",
+      "command": "echo '💻 代码审查...'",
+      "llm_config": {
+        "model": "gpt-4",
+        "prompt": "请审查以下代码："
+      }
+    },
+    {
+      "name": "llm_data_analysis",
+      "description": "数据分析",
+      "interval": 120,
+      "type": "llm",
+      "command": "echo '📊 数据分析...'",
+      "llm_config": {
+        "model": "gpt-4",
+        "prompt": "请分析以下数据："
+      }
+    }
+  ]
+}
