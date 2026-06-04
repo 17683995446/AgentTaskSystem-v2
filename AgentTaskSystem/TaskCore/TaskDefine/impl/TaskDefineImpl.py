@@ -47,8 +47,11 @@ class _TaskDefineImpl(ITaskDefine):
             "task_type": task.task_type,
             "priority": task.priority,
             "status": task.status.value,
+            "params": task.params,
             "created_at": task.created_at.isoformat(),
-            "retry_count": task.retry_count
+            "retry_count": task.retry_count,
+            "max_retries": task.max_retries,
+            "timeout_seconds": task.timeout_seconds
         }
 
     def get_task_dto(self, task_id: str) -> TaskDataDto:

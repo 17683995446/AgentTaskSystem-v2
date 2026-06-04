@@ -59,6 +59,9 @@ class _TaskStateImpl(ITaskState):
         if task_id not in self._snapshots:
             self._snapshots[task_id] = []
         self._snapshots[task_id].append(snapshot)
+        # 限制快照数量，防止内存泄漏：只保留最近10个快照
+        if len(self._snapshots[task_id]) > 10:
+            self._snapshots[task_id] = self._snapshots[task_id][-10:]
 
     def restore_snapshot(self, task_id: str, snapshot_id: str) -> Dict[str, Any]:
         snapshots = self._snapshots.get(task_id, [])
