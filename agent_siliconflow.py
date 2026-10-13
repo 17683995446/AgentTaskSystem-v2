@@ -231,7 +231,7 @@ def main():
     
     parser.add_argument(
         "--api-key",
-        default="sk-uqelhavcdhfxjzjesdenxpbtqombamjniazzjtbssmdcwdvg",
+        default="REDACTED_API_KEY",
         help="API Key"
     )
     
